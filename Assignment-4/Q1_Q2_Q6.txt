@@ -1,0 +1,57 @@
+Q1: To pass a single argument to a start routine simply requires some casting. But how would you pass multiple arguments?
+
+Answer: A better way to pass multiple arguments to a routine is to make an array of that primary data types (int, float, character and void) and pass pointer of that array to the routine as parameter or we can also make a structure or array of structures to do this depending on program requirement but we have to cast that array or structure to void pointer because it is pthread_create requirement.
+
+Q2: Remove the call to pthread_join in the code above. Now recompile and run it several times. Does it always print the same thing? Why or why not?
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+#define SMALL_STACK 131072
+
+pthread_attr_t thread_attr;
+void* fn(void *arg)
+{
+	printf("arg = 0 x%lx\n", (long)arg);	//casting arg to long so it could match size of datatypes
+	return NULL;
+}
+
+int main()
+{
+	pthread_attr_init(&thread_attr);
+	pthread_attr_setstacksize(&thread_attr, SMALL_STACK);
+
+	pthread_t th;
+	pthread_create(&th, &thread_attr, fn, (void*)14);
+	
+	return 0;
+}
+
+Answer: Basically pthread_join is waiting for a called or child thread to terminate. After removing pthread_join from the above code and executing it on several times, sometimes it displays the value of 14 in hex and sometimes not that is because it might be possible that a calling thread which is main terminates before called or child thread which is fn in this case child thread wont execute because its parent thread done its task.
+It totally depends on scheduler, if child threads first executes then we will see the output of fn thread which is hex value of 14;
+
+Q6: Assume there are 8 threads, T0 through T7. There is a read-write lock:
+lck. Assuming that the lock is awarded fairly, and that the request arrive, in
+order, as: T0:rdlock, T1:rdlock, T2:wrlock, T3:wrlock, T4:rdlock, T5:wrlock,
+T6:rdlock, T7:rdlock. In what order will the threads execute?
+
+Answer:
+
+T0: acquire read lock;
+T1: acquire read lock;
+T0: release read lock;
+T1: release read lock;
+T3: acquire write lock;
+T3: release write lock;
+T4: acquire write lock;
+T4: release write lock;
+T5: acquire write lock;
+T5: release write lock;
+T6: acquire read lock;
+T6: acquire read lock;
+T7: release read lock;
+T7: release read lock;
+
+
+
+
